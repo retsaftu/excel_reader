@@ -1,5 +1,7 @@
 const Excel = require('exceljs');
 const MongoClient = require("mongodb").MongoClient;
+const NumberInt = require("mongodb").Int32;
+
 const  ObjectID = require('mongodb').ObjectId;
 
 
@@ -56,9 +58,15 @@ wb.xlsx.readFile(filePath).then(async function(){
 
     // console.log(sh.rowCount);
     //Get all the rows data [1st and 2nd column]
-    for (i = 600; i <= 605; i++) {
+    for (i = 2; i <= 657; i++) {
         let application_number=sh.getRow(i).getCell(1).value;
+        if(!application_number){
+            application_number=null;
+        }
         let author_name=sh.getRow(i).getCell(2).value+"";
+        if(!author_name){
+            author_name=null;
+        }
         // let matching_string=sh.getRow(i).getCell(2).value+"";
 
         // console.log(author_name);
@@ -88,6 +96,9 @@ wb.xlsx.readFile(filePath).then(async function(){
         // console.log(lastName,firstName,middleName);
         let query = {templateId: ObjectID("6093860155ddb8004538cd64"),$and : [{name: {'$regex': firstName}}, {name: {'$regex': lastName}}, {name: {'$regex': middleName}}]};
         let author_id = await run(query);
+        if(!author_id){
+            author_id=null;
+        }
         // console.log(author_id[0]._id);
         // const name = await  collection.find({templateId: ObjectID("6093860155ddb8004538cd64"),$and : [{name: {'$regex': str}}, {name: {'$regex': str2}}]}).toArray();
 
@@ -104,6 +115,9 @@ wb.xlsx.readFile(filePath).then(async function(){
             // console.log(reconcile_Name);
             let query = {templateId: ObjectID("609248cb55ddb8004538cd63"),$and : [{name: {'$regex': reconcile_Name[0]}}, {name: {'$regex': reconcile_Name[1]}}]};
             let reconcile_id = await run(query);
+            if(!reconcile_id){
+                reconcile_id=null;
+            }
             reconcile_arr[j]={
                 "_id" : reconcile_id[0]._id,
                 "passportType" : 2,
@@ -128,15 +142,16 @@ wb.xlsx.readFile(filePath).then(async function(){
         let other = sh.getRow(i).getCell(15).value;
 
         let executor = sh.getRow(i).getCell(17).value+"";
-        // console.log(executor);
+        console.log(executor);
         let executor_arr = [];
         for(let j=0;j<executor.split(",").length;j++){
             let fio = executor.split(', ');
             // fio[j]=fio[j].split(/\s*;\s*/,1);
             let reconcile_Name=fio[j].split(' ');
-            // console.log(fio);
+            // console.log(reconcile_Name);
+            console.log(fio);
             // console.log("reconcile_Name",reconcile_Name);
-            let query_executor = {templateId: ObjectID("6093869255ddb8004538cd66"),$and : [{name: {'$regex': reconcile_Name[0]}}]};
+            let query_executor = {templateId: ObjectID("6093869255ddb8004538cd66"),$and : [{name: {'$regex': fio[j]}}]};
             let executor_id = await run(query_executor);
             // console.log(executor_id);
             executor_arr[j] = {
@@ -144,6 +159,7 @@ wb.xlsx.readFile(filePath).then(async function(){
                 "passportType" : 2,
                 "templateId" : "6093869255ddb8004538cd66"
             }
+            // console.log(executor_arr[j]);
         }
         // let query_executor = {templateId: ObjectID("6093869255ddb8004538cd66"),$and : [{name: {'$regex': executor}}]};
         // let executor_id = await run(query_executor);
@@ -151,14 +167,24 @@ wb.xlsx.readFile(filePath).then(async function(){
         // console.log(executor_id);
 
 
-        let openpl = sh.getRow(i).getCell(6).value+"";
-        let closepl = sh.getRow(i).getCell(7).value+"";
-        let closefact = sh.getRow(i).getCell(21).value+"";
-        openpl=openpl.substr(3,2)+"."+openpl.substr(0,2)+openpl.substr(5,10);
-        closepl=closepl.substr(3,2)+"."+closepl.substr(0,2)+closepl.substr(5,10);
-        closefact=closefact.substr(3,2)+"."+closefact.substr(0,2)+closefact.substr(5,10);
+        let openpl = sh.getRow(i).getCell(6).value;
+        let closepl = sh.getRow(i).getCell(7).value;
+        let openfact = sh.getRow(i).getCell(20).value;
+        let closefact = sh.getRow(i).getCell(21).value;
+        if(openpl){
+            openpl=openpl.substr(3,2)+"."+openpl.substr(0,2)+openpl.substr(5,10);
+        }
+        if(closepl){
+            closepl=closepl.substr(3,2)+"."+closepl.substr(0,2)+closepl.substr(5,10);
+        }
+        if(openfact){
+            openfact=openfact.substr(3,2)+"."+openfact.substr(0,2)+openfact.substr(5,10);
+        }
+        if(closefact){
+            closefact=closefact.substr(3,2)+"."+closefact.substr(0,2)+closefact.substr(5,10);
+        }
 
-        // console.log(new Date(openpl));
+        // console.log'startgjdfh'+(new Date(openpl));
         let status = sh.getRow(i).getCell(19).value+"";
         let query_status = {templateId: ObjectID("6093879d55ddb8004538cd67"),$and : [{name: {'$regex': status}}]};
         let status_id = await run(query_status);
@@ -169,7 +195,10 @@ wb.xlsx.readFile(filePath).then(async function(){
 
 
         let create_date = sh.getRow(i).getCell(3).value;
-        create_date=create_date.substr(3,2)+"."+create_date.substr(0,2)+create_date.substr(5,10);
+        // console.log();
+        if(create_date){
+            create_date=create_date.substr(3,2)+"."+create_date.substr(0,2)+create_date.substr(5,10);
+        }
 
         let query_mounth = {templateId: ObjectID("60ab330b55ddb8004538cd68")};
         let create_month_id = await run(query_mounth);
@@ -206,9 +235,9 @@ wb.xlsx.readFile(filePath).then(async function(){
             "other" : other,
             "executor" : executor_arr,
             "executor_text" : executor,
-            "openpl" : new Date(openpl),
-            "closepl" : new Date(closepl),
-            "closefact" : new Date(closefact),
+            "openpl" : openpl ? 'startgjdfh'+(new Date(openpl)).toISOString()+'gjdfh' : null,
+            "closepl" : closepl ? 'startgjdfh'+(new Date(closepl)).toISOString()+'gjdfh': null,
+            "closefact" : closefact ? 'startgjdfh'+(new Date(closefact)).toISOString()+'gjdfh' : null,
             "status" : {
                 "_id" : status_id[0]._id,
                 "passportType" : 2,
@@ -220,7 +249,7 @@ wb.xlsx.readFile(filePath).then(async function(){
                 "id" : "",
                 "comment" : ""
             },
-            "creatdate" : new Date(create_date),
+            "creatdate" : create_date ? 'startgjdfh'+(new Date(create_date)).toISOString()+'gjdfh' : null,
             "create_year" : create_date.substr(6,4),
             "create_month" : {
                 "_id" : create_month_id[parseInt(create_date.substr(0,2))-1]._id,
@@ -239,30 +268,66 @@ wb.xlsx.readFile(filePath).then(async function(){
                     "video" : []
                 }
             },
-            "createDate" : new Date,
-            "updateDate" : new Date,
+            "createDate" : 'startgjdfh'+(new Date).toISOString()+'gjdfh',
+            "updateDate" : 'startgjdfh'+(new Date).toISOString()+'gjdfh',
             "isDeleted" : false,
             "passportType" : 1,
             "createInfo" : {
-                "createDate" : new Date
+                "createDate" : 'startgjdfh'+(new Date).toISOString()+'gjdfh'
             },
             "comment" : comment,
             "content" : content,
             "Address" : "",
         };
-        console.log(arr[i]);
+        // console.log(arr[i]);
         // console.log('1', sh.getRow(i).getCell(1).value);//1
 
         // console.log(sh.getRow(i).getCell(2).value);
+        // executor_arr=JSON.stringify(executor_arr);
+        application_number=parseInt(application_number);
+        // console.log(executor_arr);
+        // console.log(application_number);
+        update(application_number,openfact);
     }
-    for(i=600;i<=605;i++){
+    // var json = JSON.stringify(arr);
+    // var fs = require('fs');
+    // // // fs.writeFile('myjsonfile.json', json, 'utf8', callback);
+    // fs.writeFile ("input3.json", json, function(err) {
+    //     if (err) throw err;
+    //     console.log('complete');
+    //     }
+    // );
+    // console.log(arr);
+    // for(i=2;i<=605;i++){
         // console.log(arr[i]);
         // addData(arr);
-    }
+    // }
     
 
 });
+async function update(application_number,openfact) {
+    try {
+        await mongoClient.connect();
+        const db = mongoClient.db("agisads");
+        const collection = db.collection("facilityPassports");
+        console.log(application_number);
+        // application_number=Number(application_number);
+        // const result2 = await collection.find({templateId: ObjectID("609246b055ddb8004538cd62"),name:application_number}).toArray();
+        // console.log(result2);
+        // const name = await  collection.find(query).toArray();
+        // const name = await  collection.updateMany({templateId: ObjectID("6093860155ddb8004538cd64"),$and : [{name: {'$regex': str}}, {name: {'$regex': str2}}]}).toArray();
+        const result = await collection.updateOne({templateId: ObjectID("609246b055ddb8004538cd62"),name:application_number}, { $set: {openfact: new Date(openfact)}});
 
+        // const result = await collection.updateOne({templateId: ObjectID("609246b055ddb8004538cd62"),name:application_number}, { $set: {executor: executor_arr}});
+        // const name = await  collection.find({templateId: ObjectID("6093860155ddb8004538cd64"),name: {'$regex': str}}).toArray();
+        console.log(result);
+        // console.log(name);
+        // return name;
+         
+    }catch(err) {
+        console.log(err);
+    } 
+}
 
 
 
